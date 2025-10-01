@@ -6,6 +6,10 @@ generate:
 test: generate
 	cd go && go test ./...
 
+.PHONY: deps
+deps:
+	cd go && go mod vendor
+
 .PHONY: init
-init:
+init: deps
 	cp .env.example .env
