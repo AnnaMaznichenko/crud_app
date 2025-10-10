@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+    "fmt"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -35,7 +36,7 @@ var (
 		Age:  10,
 	}
 	testUserNameShort = &dto.User{
-		Name: "Jo",
+		Name: "J",
 		Age:  10,
 	}
 	testUserNameLong = &dto.User{
@@ -60,7 +61,7 @@ var (
 	errAgeNeg       = errors.New("age must be positive")
 	errAgeUnreal    = errors.New("age seems unrealistic")
 	errUserNil      = errors.New("user object cannot be nil")
-	errUserNotFound = errors.New("user with ID not found")
+    errUserNotFound = fmt.Errorf("user with ID %d not found", id)
 )
 
 func TestUser_List(t *testing.T) {
@@ -82,8 +83,6 @@ func TestUser_List(t *testing.T) {
 					Return(expectedUsers, nil)
 			},
 			expectedUsers: testUsers,
-			wantError:     false,
-			expectedError: nil,
 		}, {
 			name: "error repository list",
 			setupMocks: func(mr *mock_repository.MockUserRepo) {
@@ -92,7 +91,6 @@ func TestUser_List(t *testing.T) {
 					List(gomock.Any()).
 					Return(nil, expectedError)
 			},
-			expectedUsers: nil,
 			wantError:     true,
 			expectedError: errRepo,
 		}, {
@@ -103,8 +101,6 @@ func TestUser_List(t *testing.T) {
 					Return([]dto.User{}, nil)
 			},
 			expectedUsers: []dto.User{},
-			wantError:     false,
-			expectedError: nil,
 		},
 	}
 
@@ -125,10 +121,12 @@ func TestUser_List(t *testing.T) {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError, err)
 				require.Nil(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedUsers, result)
+
+                return
 			}
+
+            require.NoError(t, err)
+            require.Equal(t, tc.expectedUsers, result)
 		})
 	}
 }
@@ -157,8 +155,6 @@ func TestUser_Create(t *testing.T) {
 					Return(expectedUser, nil)
 			},
 			expectedUser:  testUserWithID,
-			wantError:     false,
-			expectedError: nil,
 		}, {
 			name:  "error repository create",
 			input: testUser,
@@ -171,7 +167,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUser).
 					Return(nil, expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errRepo,
 		}, {
@@ -183,7 +178,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUserNameEmpty).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errNameEmpty,
 		}, {
@@ -195,7 +189,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUserNameShort).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errNameTooShort,
 		}, {
@@ -207,7 +200,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUserNameLong).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errNameTooLong,
 		}, {
@@ -219,7 +211,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUserAgeNeg).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errAgeNeg,
 		}, {
@@ -231,7 +222,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), testUserAgeUnreal).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errAgeUnreal,
 		}, {
@@ -243,7 +233,6 @@ func TestUser_Create(t *testing.T) {
 					Create(gomock.Any(), nil).
 					Return(expectedError)
 			},
-			expectedUser:  nil,
 			wantError:     true,
 			expectedError: errUserNil,
 		},
@@ -266,10 +255,12 @@ func TestUser_Create(t *testing.T) {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError, err)
 				require.Nil(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedUser, result)
+
+                return
 			}
+
+            require.NoError(t, err)
+            require.Equal(t, tc.expectedUser, result)
 		})
 	}
 }
@@ -297,8 +288,6 @@ func TestUser_Update(t *testing.T) {
 					Update(gomock.Any(), testUser, id).
 					Return(nil)
 			},
-			wantError:     false,
-			expectedError: nil,
 		}, {
 			name: "error repository update",
 			user: testUser,
@@ -429,9 +418,11 @@ func TestUser_Update(t *testing.T) {
 			if tc.wantError {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError, err)
-			} else {
-				require.NoError(t, err)
+
+                return
 			}
+				
+            require.NoError(t, err)
 		})
 	}
 }
@@ -457,8 +448,6 @@ func TestUser_Delete(t *testing.T) {
 					Delete(gomock.Any(), id).
 					Return(nil)
 			},
-			wantError:     false,
-			expectedError: nil,
 		}, {
 			name: "error repository delete",
 			id:   id,
@@ -514,9 +503,11 @@ func TestUser_Delete(t *testing.T) {
 			if tc.wantError {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError, err)
-			} else {
-				require.NoError(t, err)
+
+                return
 			}
+				
+            require.NoError(t, err)
 		})
 	}
 }
